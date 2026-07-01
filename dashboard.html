@@ -1,675 +1,1330 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Dashboard — Phishing Detection</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --purple:#534AB7;--purple-light:#7F77DD;--purple-bg:#ede9fb;
-  --safe:#1D9E75;--safe-bg:#E1F5EE;
-  --danger:#D85A30;--danger-bg:#FAECE7;
-  --text:#3a3560;--muted:#a9a4c2;--border:#f0edf8;
-}
-body{font-family:'DM Sans',sans-serif;background:#f5f3fd;color:var(--text);min-height:100vh;}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Dashboard — Phishing Detection</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-nav{
-  background:rgba(250,249,253,0.95);backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);padding:0 32px;
-  display:flex;align-items:center;justify-content:space-between;height:60px;
-  position:sticky;top:0;z-index:100;
-}
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.nav-icon{width:32px;height:32px;border-radius:10px;background:var(--purple-bg);display:flex;align-items:center;justify-content:center;}
-.nav-icon i{font-size:16px;color:var(--purple-light);}
-.nav-name{font-size:14px;font-weight:600;color:var(--text);}
-.nav-right{display:flex;align-items:center;gap:8px;}
-.nav-link{font-size:13px;color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:8px;transition:all 0.2s;}
-.nav-link:hover{color:var(--text);background:var(--purple-bg);}
+    :root {
+      --purple: #534AB7;
+      --purple-light: #7F77DD;
+      --purple-bg: #ede9fb;
+      --safe: #1D9E75;
+      --safe-bg: #E1F5EE;
+      --danger: #D85A30;
+      --danger-bg: #FAECE7;
+      --text: #3a3560;
+      --muted: #a9a4c2;
+      --border: #f0edf8;
+    }
 
-.container{max-width:1080px;margin:0 auto;padding:28px 24px;}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f3fd;
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-/* IMPORT BAR */
-.import-bar{
-  background:#fff;border:1px solid var(--border);border-radius:16px;
-  padding:16px 20px;margin-bottom:20px;
-  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-}
-.import-bar.hidden{display:none;}
-.import-info{flex:1;min-width:200px;}
-.import-title{font-size:13px;font-weight:500;color:var(--text);}
-.import-sub{font-size:11px;color:var(--muted);margin-top:2px;}
-.import-actions{display:flex;gap:8px;flex-wrap:wrap;}
-.btn{
-  border:none;border-radius:10px;padding:8px 16px;
-  font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;
-  cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;
-}
-.btn-primary{background:var(--purple);color:#fff;}
-.btn-primary:hover{background:var(--purple-light);}
-.btn-ghost{background:var(--purple-bg);color:var(--purple);}
-.btn-ghost:hover{background:#e2dcf8;}
-.btn-sm{padding:6px 12px;font-size:11px;}
+    nav {
+      background: rgba(250, 249, 253, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-/* STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
-.stat-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 14px;text-align:center;}
-.stat-n{font-size:30px;font-weight:600;letter-spacing:-0.03em;}
-.stat-n.total{color:var(--purple);}
-.stat-n.safe{color:var(--safe);}
-.stat-n.phish{color:var(--danger);}
-.stat-n.conf{color:var(--text);}
-.stat-lbl{font-size:10px;color:#c4bdf0;text-transform:uppercase;letter-spacing:0.07em;margin-top:4px;}
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
 
-/* SCAN INLINE */
-.scan-inline{
-  background:#fff;border:1px solid var(--border);border-radius:16px;
-  padding:16px 20px;margin-bottom:20px;
-}
-.scan-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.scan-title{font-size:13px;font-weight:500;color:var(--text);}
-.scan-row{display:flex;gap:10px;}
-.scan-input{
-  flex:1;border:1.5px solid var(--border);border-radius:10px;
-  padding:9px 13px;font-family:'DM Mono',monospace;font-size:12px;
-  color:var(--text);background:#faf9fd;outline:none;transition:border-color 0.2s;
-}
-.scan-input:focus{border-color:#c4bdf0;}
-.scan-input::placeholder{color:#d4cfec;}
-.scan-btn{
-  background:var(--purple);border:none;border-radius:10px;
-  padding:9px 18px;color:#fff;font-size:12px;font-weight:600;
-  font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s;white-space:nowrap;
-}
-.scan-btn:hover{background:var(--purple-light);}
-.scan-btn:disabled{background:#c4bdf0;cursor:not-allowed;}
-#inlineScanResult{display:none;margin-top:12px;}
-.result-mini{border-radius:12px;padding:12px 14px;border:1px solid transparent;}
-.result-mini.safe{background:#f0faf6;border-color:#9FE1CB;}
-.result-mini.phishing{background:#fdf5f3;border-color:#F5C4B3;}
-.result-mini.scanning{background:#f9f8fd;border-color:var(--border);}
-.result-mini.error{background:#fffbf0;border-color:#F5E6B3;}
-.mini-top{display:flex;align-items:center;justify-content:space-between;}
-.mini-status{display:flex;align-items:center;gap:8px;}
-.mini-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
-.mini-icon.safe{background:var(--safe-bg);}
-.mini-icon.safe i{color:var(--safe);font-size:14px;}
-.mini-icon.phishing{background:var(--danger-bg);}
-.mini-icon.phishing i{color:var(--danger);font-size:14px;}
-.mini-icon.error{background:#FEF9E7;}
-.mini-icon.error i{color:#EF9F27;font-size:14px;}
-.mini-label{font-size:13px;font-weight:600;}
-.mini-label.safe{color:#0F6E56;}
-.mini-label.phishing{color:#993C1D;}
-.mini-pill{font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;}
-.mini-pill.safe{background:var(--safe-bg);color:#085041;}
-.mini-pill.phishing{background:var(--danger-bg);color:#712B13;}
-.mini-url{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.mini-feats{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.mini-feat{font-size:10px;color:#8c87a8;display:flex;align-items:center;gap:4px;}
-.mini-feat-dot{width:5px;height:5px;border-radius:50%;background:#F0997B;}
-.bar-lbl{display:flex;justify-content:space-between;font-size:10px;color:#c4bdf0;margin:8px 0 3px;}
-.bar-track{height:4px;background:#f0edf8;border-radius:4px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:4px;transition:width 0.5s ease;}
-.bar-fill.safe{background:#5DCAA5;}
-.bar-fill.phishing{background:#F0997B;}
-.scan-ring-sm{width:20px;height:20px;border:2px solid #ede9fb;border-top-color:var(--purple-light);border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;}
-@keyframes spin{to{transform:rotate(360deg);}}
+    .nav-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--purple-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-/* CHARTS */
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
-.chart-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;}
-.chart-card.full{grid-column:1/-1;}
-.chart-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;}
-.chart-sub{font-size:10px;color:#c4bdf0;margin-bottom:12px;}
-.legend{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#8c87a8;}
-.legend-dot{width:8px;height:8px;border-radius:2px;}
+    .nav-icon i {
+      font-size: 16px;
+      color: var(--purple-light);
+    }
 
-/* HISTORY */
-.history-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:20px;}
-.history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
-.filter-row{display:flex;gap:6px;}
-.filter-btn{
-  padding:5px 12px;border-radius:8px;font-size:11px;font-weight:500;
-  border:1px solid var(--border);background:transparent;color:var(--muted);
-  cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;
-}
-.filter-btn.active{background:var(--purple);border-color:var(--purple);color:#fff;}
-.search-input{
-  border:1px solid var(--border);border-radius:8px;
-  padding:5px 10px;font-size:11px;font-family:'DM Mono',monospace;
-  color:var(--text);background:#faf9fd;outline:none;width:160px;
-}
-.search-input::placeholder{color:#d4cfec;}
-.hitem{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f9f8fd;}
-.hitem:last-child{border-bottom:none;}
-.h-ico{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.h-ico.s{background:var(--safe-bg);}
-.h-ico.s i{color:var(--safe);font-size:14px;}
-.h-ico.p{background:var(--danger-bg);}
-.h-ico.p i{color:var(--danger);font-size:14px;}
-.h-url{flex:1;font-size:11px;color:#8c87a8;font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.h-badge{font-size:9px;font-weight:600;padding:3px 9px;border-radius:7px;white-space:nowrap;}
-.h-badge.s{background:var(--safe-bg);color:#0F6E56;}
-.h-badge.p{background:var(--danger-bg);color:#993C1D;}
-.h-conf{font-size:10px;color:var(--muted);white-space:nowrap;min-width:52px;text-align:right;}
-.h-time{font-size:9px;color:#d4cfec;white-space:nowrap;}
-.empty-state{text-align:center;padding:32px;color:#d4cfec;font-size:12px;}
-.empty-state i{font-size:32px;display:block;margin-bottom:8px;color:#e8e3f5;}
-.pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:12px;color:var(--muted);}
-.page-btn{padding:5px 10px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;transition:all 0.2s;}
-.page-btn:hover:not(:disabled){background:var(--purple-bg);}
-.page-btn:disabled{opacity:0.4;cursor:not-allowed;}
+    .nav-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
 
-/* UPLOAD MODAL */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(58,53,96,0.4);
-  display:flex;align-items:center;justify-content:center;z-index:1000;
-  display:none;
-}
-.modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:20px;padding:28px;width:480px;max-width:90vw;}
-.modal-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px;}
-.modal-sub{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.7;}
-.modal-textarea{
-  width:100%;height:100px;font-family:'DM Mono',monospace;font-size:11px;
-  color:var(--text);background:#faf9fd;border:1px solid var(--border);
-  border-radius:10px;padding:10px;outline:none;resize:none;margin-bottom:12px;
-}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-@media(max-width:700px){
-  .stats-grid{grid-template-columns:repeat(2,1fr);}
-  .charts-grid{grid-template-columns:1fr;}
-  .charts-grid .chart-card.full{grid-column:1;}
-  .container{padding:16px;}
-}
-</style>
+    .nav-link {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+      background: var(--purple-bg);
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    /* IMPORT BAR */
+    .import-bar {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .import-bar.hidden {
+      display: none;
+    }
+
+    .import-info {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .import-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .import-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+
+    .stat-n {
+      font-size: 30px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-n.total {
+      color: var(--purple);
+    }
+
+    .stat-n.safe {
+      color: var(--safe);
+    }
+
+    .stat-n.phish {
+      color: var(--danger);
+    }
+
+    .stat-n.conf {
+      color: var(--text);
+    }
+
+    .stat-lbl {
+      font-size: 10px;
+      color: #c4bdf0;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-top: 4px;
+    }
+
+    /* SCAN INLINE */
+    .scan-inline {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+
+    .scan-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .scan-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .scan-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .scan-input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      background: #faf9fd;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .scan-input:focus {
+      border-color: #c4bdf0;
+    }
+
+    .scan-input::placeholder {
+      color: #d4cfec;
+    }
+
+    .scan-btn {
+      background: var(--purple);
+      border: none;
+      border-radius: 10px;
+      padding: 9px 18px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .scan-btn:hover {
+      background: var(--purple-light);
+    }
+
+    .scan-btn:disabled {
+      background: #c4bdf0;
+      cursor: not-allowed;
+    }
+
+    #inlineScanResult {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .result-mini {
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid transparent;
+    }
+
+    .result-mini.safe {
+      background: #f0faf6;
+      border-color: #9FE1CB;
+    }
+
+    .result-mini.phishing {
+      background: #fdf5f3;
+      border-color: #F5C4B3;
+    }
+
+    .result-mini.scanning {
+      background: #f9f8fd;
+      border-color: var(--border);
+    }
+
+    .result-mini.error {
+      background: #fffbf0;
+      border-color: #F5E6B3;
+    }
+
+    .mini-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mini-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mini-icon.safe {
+      background: var(--safe-bg);
+    }
+
+    .mini-icon.safe i {
+      color: var(--safe);
+      font-size: 14px;
+    }
+
+    .mini-icon.phishing {
+      background: var(--danger-bg);
+    }
+
+    .mini-icon.phishing i {
+      color: var(--danger);
+      font-size: 14px;
+    }
+
+    .mini-icon.error {
+      background: #FEF9E7;
+    }
+
+    .mini-icon.error i {
+      color: #EF9F27;
+      font-size: 14px;
+    }
+
+    .mini-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .mini-label.safe {
+      color: #0F6E56;
+    }
+
+    .mini-label.phishing {
+      color: #993C1D;
+    }
+
+    .mini-pill {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .mini-pill.safe {
+      background: var(--safe-bg);
+      color: #085041;
+    }
+
+    .mini-pill.phishing {
+      background: var(--danger-bg);
+      color: #712B13;
+    }
+
+    .mini-url {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      margin-top: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mini-feats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .mini-feat {
+      font-size: 10px;
+      color: #8c87a8;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mini-feat-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #F0997B;
+    }
+
+    .bar-lbl {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #c4bdf0;
+      margin: 8px 0 3px;
+    }
+
+    .bar-track {
+      height: 4px;
+      background: #f0edf8;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .bar-fill.safe {
+      background: #5DCAA5;
+    }
+
+    .bar-fill.phishing {
+      background: #F0997B;
+    }
+
+    .scan-ring-sm {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ede9fb;
+      border-top-color: var(--purple-light);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* CHARTS */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .chart-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .chart-card.full {
+      grid-column: 1/-1;
+    }
+
+    .chart-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .chart-sub {
+      font-size: 10px;
+      color: #c4bdf0;
+      margin-bottom: 12px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #8c87a8;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    /* HISTORY */
+    .history-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .filter-btn.active {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff;
+    }
+
+    .search-input {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text);
+      background: #faf9fd;
+      outline: none;
+      width: 160px;
+    }
+
+    .search-input::placeholder {
+      color: #d4cfec;
+    }
+
+    .hitem {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid #f9f8fd;
+    }
+
+    .hitem:last-child {
+      border-bottom: none;
+    }
+
+    .h-ico {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .h-ico.s {
+      background: var(--safe-bg);
+    }
+
+    .h-ico.s i {
+      color: var(--safe);
+      font-size: 14px;
+    }
+
+    .h-ico.p {
+      background: var(--danger-bg);
+    }
+
+    .h-ico.p i {
+      color: var(--danger);
+      font-size: 14px;
+    }
+
+    .h-ico.w {
+      background: var(--warn-bg);
+    }
+
+    .h-ico.w i {
+      color: var(--warn);
+      font-size: 14px;
+    }
+
+    .h-url {
+      flex: 1;
+      font-size: 11px;
+      color: #8c87a8;
+      font-family: 'DM Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .h-badge {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 7px;
+      white-space: nowrap;
+    }
+
+    .h-badge.s {
+      background: var(--safe-bg);
+      color: #0F6E56;
+    }
+
+    .h-badge.p {
+      background: var(--danger-bg);
+      color: #993C1D;
+    }
+
+    .h-badge.w {
+      background: var(--warn-bg);
+      color: #8A5B00;
+    }
+
+    .history-action-btn,
+    .delete-item-btn {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .history-action-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .history-action-btn:hover,
+    .delete-item-btn:hover {
+      border-color: #F0997B;
+      color: #D85A30;
+      background: var(--danger-bg);
+    }
+
+    .delete-item-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    .h-conf {
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .h-time {
+      font-size: 9px;
+      color: #d4cfec;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px;
+      color: #d4cfec;
+      font-size: 12px;
+    }
+
+    .empty-state i {
+      font-size: 32px;
+      display: block;
+      margin-bottom: 8px;
+      color: #e8e3f5;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .page-btn {
+      padding: 5px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: var(--purple-bg);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    @media(max-width:700px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .charts-grid .chart-card.full {
+        grid-column: 1;
+      }
+
+      .container {
+        padding: 16px;
+      }
+    }
+  
+/* caution state — added for 3-level URL risk UI */
+:root{--caution:#E6A817;--caution-bg:#FFF6DC;}
+.stat-n.caution{color:var(--caution);}
+.result-mini.caution{border-color:#F0D17A;background:#FFFBEE;}
+.mini-icon.caution{background:var(--caution-bg);}
+.mini-icon.caution i{color:var(--caution);}
+.mini-label.caution{color:#8A5D00;}
+.mini-pill.caution{background:var(--caution-bg);color:#7A5200;}
+.bar-fill.caution{background:#E6A817;}
+.result-box.caution{border-color:#F0D17A;background:#FFFBEE;}
+.res-icon.caution{background:var(--caution-bg);}
+.res-icon.caution i{color:var(--caution);font-size:17px;}
+.res-label.caution{color:#8A5D00;}
+.conf-pill.caution{background:var(--caution-bg);color:#7A5200;}
+.feat-dot.good{background:#5DCAA5;}
+
+  </style>
 </head>
+
 <body>
 
-<nav>
-  <a class="nav-brand" href="index.html">
-    <div class="nav-icon"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
-    <span class="nav-name">Phishing Detection</span>
-  </a>
-  <div class="nav-right">
-    <a class="nav-link" href="index.html">Beranda</a>
-    <button class="btn btn-ghost btn-sm" id="importBtn">
-      <i class="ti ti-upload" aria-hidden="true"></i> Import data
-    </button>
-  </div>
-</nav>
+  <nav>
+    <a class="nav-brand" href="index.html">
+      <div class="nav-icon"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
+      <span class="nav-name">Phishing Detection</span>
+    </a>
+    <div class="nav-right">
+      <a class="nav-link" href="index.html">Beranda</a>
+    </div>
+  </nav>
 
-<div class="container">
-
-  <!-- IMPORT BAR (tampil jika belum ada data) -->
-  <div class="import-bar" id="importBar">
-    <div class="nav-icon" style="flex-shrink:0;"><i class="ti ti-database" aria-hidden="true"></i></div>
-    <div class="import-info">
-      <div class="import-title">Belum ada data riwayat</div>
-      <div class="import-sub">Import JSON dari extension atau klik "Coba data demo" untuk melihat contoh dashboard</div>
-    </div>
-    <div class="import-actions">
-      <button class="btn btn-primary" id="importBtnBar">
-        <i class="ti ti-upload" aria-hidden="true"></i> Import JSON
-      </button>
-      <button class="btn btn-ghost" id="demoBtn">Coba demo</button>
-    </div>
-  </div>
-
-  <!-- STATS -->
-  <div class="stats-grid" id="statsGrid" style="display:none;">
-    <div class="stat-card">
-      <div class="stat-n total" id="statTotal">0</div>
-      <div class="stat-lbl">Total scan</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-n safe" id="statSafe">0</div>
-      <div class="stat-lbl">Aman</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-n phish" id="statPhish">0</div>
-      <div class="stat-lbl">Phishing</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-n conf" id="statConf">0%</div>
-      <div class="stat-lbl">Avg confidence</div>
-    </div>
-  </div>
-
-  <!-- SCAN INLINE -->
-  <div class="scan-inline">
-    <div class="scan-header">
-      <div class="scan-title"><i class="ti ti-scan" style="vertical-align:-2px;margin-right:5px;color:var(--purple-light);" aria-hidden="true"></i>Deteksi URL</div>
-    </div>
-    <div class="scan-row">
-      <input class="scan-input" id="urlInput" type="text" placeholder="https://contoh.com/login — masukkan URL untuk dicek"/>
-      <button class="scan-btn" id="scanBtn">Scan</button>
-    </div>
-    <div id="inlineScanResult"></div>
-  </div>
-
-  <!-- CHARTS -->
-  <div class="charts-grid" id="chartsGrid" style="display:none;">
-    <div class="chart-card">
-      <div class="chart-title">Distribusi hasil scan</div>
-      <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Aman</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#D85A30;"></span>Phishing</span>
+  <div class="container">
+    <div class="import-bar" id="importBar">
+      <div class="nav-icon" style="flex-shrink:0;"><i class="ti ti-database" aria-hidden="true"></i></div>
+      <div class="import-info">
+        <div class="import-title">Belum ada data riwayat</div>
+        <div class="import-sub">Buka extension → klik "Lihat Dashboard" untuk memuat data riwayat scan kamu secara
+          otomatis.</div>
       </div>
-      <div style="position:relative;height:220px;">
-        <canvas id="pieChart" role="img" aria-label="Donut chart distribusi aman vs phishing"></canvas>
+    </div>
+    <!-- STATS -->
+    <div class="stats-grid" id="statsGrid" style="display:none;">
+      <div class="stat-card">
+        <div class="stat-n total" id="statTotal">0</div>
+        <div class="stat-lbl">Total scan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n safe" id="statSafe">0</div>
+        <div class="stat-lbl">Aman</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n caution" id="statCaution">0</div>
+        <div class="stat-lbl">Waspada</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-n phish" id="statPhish">0</div>
+        <div class="stat-lbl">Phishing</div>
       </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-title">Confidence per scan</div>
-      <div class="chart-sub">20 scan terakhir — hijau = aman, merah = phishing</div>
-      <div style="position:relative;height:220px;">
-        <canvas id="barChart" role="img" aria-label="Bar chart confidence tiap scan"></canvas>
-      </div>
-    </div>
 
-    <div class="chart-card full">
-      <div class="chart-title">Tren scan per hari</div>
-      <div class="legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#534AB7;"></span>Total</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Aman</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#D85A30;"></span>Phishing</span>
+    <!-- CHARTS -->
+    <div class="charts-grid" id="chartsGrid" style="display:none;">
+      <div class="chart-card">
+        <div class="chart-title">Distribusi hasil scan</div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Aman</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#E6A817;"></span>Waspada</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#D85A30;"></span>Phishing</span>
+        </div>
+        <div style="position:relative;height:220px;">
+          <canvas id="pieChart" role="img" aria-label="Donut chart distribusi aman vs phishing"></canvas>
+        </div>
       </div>
-      <div style="position:relative;height:180px;">
-        <canvas id="lineChart" role="img" aria-label="Line chart tren scan per hari"></canvas>
-      </div>
-    </div>
 
-    <div class="chart-card">
-      <div class="chart-title">Distribusi confidence</div>
-      <div class="chart-sub">Frekuensi nilai confidence</div>
-      <div style="position:relative;height:220px;">
-        <canvas id="histChart" role="img" aria-label="Histogram distribusi confidence"></canvas>
+      <div class="chart-card">
+        <div class="chart-title">Confidence per scan</div>
+        <div class="chart-sub">20 scan terakhir — hijau = aman, kuning = waspada, merah = phishing</div>
+        <div style="position:relative;height:220px;">
+          <canvas id="barChart" role="img" aria-label="Bar chart confidence tiap scan"></canvas>
+        </div>
       </div>
-    </div>
 
-    <div class="chart-card">
-      <div class="chart-title">Top domain dikunjungi</div>
-      <div class="chart-sub">10 domain terbanyak</div>
-      <div style="position:relative;height:220px;">
-        <canvas id="domainChart" role="img" aria-label="Bar chart top domain"></canvas>
+      <div class="chart-card full">
+        <div class="chart-title">Tren scan per hari</div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#534AB7;"></span>Total</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>Aman</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#E6A817;"></span>Waspada</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#D85A30;"></span>Phishing</span>
+        </div>
+        <div style="position:relative;height:180px;">
+          <canvas id="lineChart" role="img" aria-label="Line chart tren scan per hari"></canvas>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- HISTORY TABLE -->
-  <div class="history-card" id="historyCard" style="display:none;">
-    <div class="history-header">
-      <div>
-        <div style="font-size:13px;font-weight:500;color:var(--text);">Riwayat scan lengkap</div>
-        <div style="font-size:10px;color:#c4bdf0;margin-top:2px;" id="historyCount"></div>
+      <div class="chart-card">
+        <div class="chart-title">Distribusi confidence</div>
+        <div class="chart-sub">Frekuensi nilai confidence</div>
+        <div style="position:relative;height:220px;">
+          <canvas id="histChart" role="img" aria-label="Histogram distribusi confidence"></canvas>
+        </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <input class="search-input" id="searchInput" placeholder="Cari domain…"/>
-        <div class="filter-row">
-          <button class="filter-btn active" data-filter="all">Semua</button>
-          <button class="filter-btn" data-filter="safe">Aman</button>
-          <button class="filter-btn" data-filter="phishing">Phishing</button>
+
+      <div class="chart-card">
+        <div class="chart-title">Top domain dikunjungi</div>
+        <div class="chart-sub">10 domain terbanyak</div>
+        <div style="position:relative;height:220px;">
+          <canvas id="domainChart" role="img" aria-label="Bar chart top domain"></canvas>
         </div>
       </div>
     </div>
-    <div id="historyList"></div>
-    <div class="pagination">
-      <button class="page-btn" id="prevBtn" disabled>← Prev</button>
-      <span id="pageInfo">1 / 1</span>
-      <button class="page-btn" id="nextBtn" disabled>Next →</button>
+
+    <!-- HISTORY TABLE -->
+    <div class="history-card" id="historyCard" style="display:none;">
+      <div class="history-header">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text);">Riwayat scan lengkap</div>
+          <div style="font-size:10px;color:#c4bdf0;margin-top:2px;" id="historyCount"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input class="search-input" id="searchInput" placeholder="Cari domain…" />
+          <div class="filter-row">
+            <button class="filter-btn active" data-filter="all">Semua</button>
+            <button class="filter-btn" data-filter="safe">Aman</button>
+            <button class="filter-btn" data-filter="caution">Waspada</button>
+            <button class="filter-btn" data-filter="phishing">Phishing</button>
+          </div>
+          <button class="history-action-btn" id="clearHistoryBtn" type="button">
+            <i class="ti ti-trash" aria-hidden="true"></i> Hapus semua
+          </button>
+        </div>
+      </div>
+      <div id="historyList"></div>
+      <div class="pagination">
+        <button class="page-btn" id="prevBtn" disabled>← Prev</button>
+        <span id="pageInfo">1 / 1</span>
+        <button class="page-btn" id="nextBtn" disabled>Next →</button>
+      </div>
     </div>
+
   </div>
 
-</div>
+  <script>
+    const UI_THRESHOLDS = { CAUTION: 0.50, PHISHING: 0.70 };
+    const COLORS = {
+      safe: '#1D9E75',
+      caution: '#E6A817',
+      phishing: '#D85A30',
+      total: '#534AB7'
+    };
 
-<!-- IMPORT MODAL -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-title">Import riwayat scan</div>
-    <div class="modal-sub">
-      Buka extension → tab Riwayat → klik <strong>Export</strong> → upload file JSON.<br/>
-      Atau copy dari background service worker console:<br/>
-      <code style="font-family:'DM Mono',monospace;font-size:10px;color:var(--purple);">chrome.storage.local.get("history", d => console.log(JSON.stringify(d.history)))</code>
-    </div>
-    <input type="file" id="fileInput" accept=".json" style="display:none;">
-    <button class="btn btn-ghost" onclick="document.getElementById('fileInput').click()" style="margin-bottom:10px;width:100%;">
-      <i class="ti ti-file-upload" aria-hidden="true"></i> Pilih file JSON
-    </button>
-    <textarea class="modal-textarea" id="jsonInput" placeholder='[{"url":"...","label":"safe","confidence":0.8,"timestamp":...}]'></textarea>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="modalCancel">Batal</button>
-      <button class="btn btn-primary" id="modalLoad">Muat data</button>
-    </div>
-  </div>
-</div>
+    let allData = [];
+    let filteredData = [];
+    let currentFilter = 'all';
+    let currentPage = 1;
+    let searchQuery = '';
+    const PER_PAGE = 20;
+    let pieInst, barInst, lineInst, histInst, domainInst;
 
-<script src="model.js"></script>
-<script>
-let allData = [];
-let filteredData = [];
-let currentFilter = 'all';
-let currentPage = 1;
-let searchQuery = '';
-const PER_PAGE = 20;
-let pieInst, barInst, lineInst, histInst, domainInst;
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const dataParam = params.get('data');
+      let autoLoaded = false;
 
-// ── INIT ──────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  // Cek URL param dari extension
-  const params = new URLSearchParams(window.location.search);
-  const dataParam = params.get('data');
-  if (dataParam) {
-    try {
-      const data = JSON.parse(decodeURIComponent(dataParam));
-      renderDashboard(data);
-    } catch(e) { console.error('Invalid data param', e); }
-  }
+      if (dataParam) {
+        try {
+          const data = JSON.parse(decodeURIComponent(dataParam));
+          if (Array.isArray(data) && data.length > 0) {
+            renderDashboard(data);
+            autoLoaded = true;
+            try { localStorage.setItem('phishingHistory', JSON.stringify(data)); } catch { }
+            removeDataQueryParam();
+          }
+        } catch (e) { console.error('Invalid data param', e); }
+      }
 
-  // Event listeners
-  document.getElementById('importBtn').addEventListener('click', openModal);
-  document.getElementById('importBtnBar').addEventListener('click', openModal);
-  document.getElementById('demoBtn').addEventListener('click', loadDemo);
-  document.getElementById('modalCancel').addEventListener('click', closeModal);
-  document.getElementById('modalLoad').addEventListener('click', loadFromText);
-  document.getElementById('fileInput').addEventListener('change', loadFromFile);
-  document.getElementById('scanBtn').addEventListener('click', doScan);
-  document.getElementById('urlInput').addEventListener('keydown', e => { if(e.key==='Enter') doScan(); });
-  document.getElementById('searchInput').addEventListener('input', e => {
-    searchQuery = e.target.value.toLowerCase();
-    currentPage = 1;
-    applyFilter();
-  });
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      currentPage = 1;
-      applyFilter();
+      if (!autoLoaded) {
+        try {
+          const saved = localStorage.getItem('phishingHistory');
+          if (saved) {
+            const data = JSON.parse(saved);
+            if (Array.isArray(data) && data.length > 0) {
+              renderDashboard(data);
+              autoLoaded = true;
+            }
+          }
+        } catch { }
+      }
+
+      window.addEventListener('message', event => {
+        const isValidOrigin = event.origin && (
+          event.origin.startsWith('chrome-extension://') ||
+          event.origin === window.location.origin
+        );
+        if (!isValidOrigin) return;
+
+        if (
+          event.data &&
+          event.data.type === 'LOAD_HISTORY' &&
+          Array.isArray(event.data.history) &&
+          event.data.history.length > 0
+        ) {
+          renderDashboard(event.data.history);
+          try { localStorage.setItem('phishingHistory', JSON.stringify(event.data.history)); } catch { }
+        }
+      });
+
+      document.getElementById('searchInput').addEventListener('input', e => {
+        searchQuery = e.target.value.toLowerCase();
+        currentPage = 1;
+        applyFilter();
+      });
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.filter;
+          currentPage = 1;
+          applyFilter();
+        });
+      });
+      document.getElementById('prevBtn').addEventListener('click', () => { currentPage--; renderHistoryPage(); });
+      document.getElementById('nextBtn').addEventListener('click', () => { currentPage++; renderHistoryPage(); });
+      document.getElementById('clearHistoryBtn').addEventListener('click', clearDashboardHistory);
     });
-  });
-  document.getElementById('prevBtn').addEventListener('click', () => { currentPage--; renderHistoryPage(); });
-  document.getElementById('nextBtn').addEventListener('click', () => { currentPage++; renderHistoryPage(); });
-  document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
-});
 
-// ── MODAL ─────────────────────────────────────────────────
-function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
-function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+    function normalizeItem(item = {}) {
+      const risk = getPhishingProbability(item);
+      const label = getUiLabel(item, risk);
+      const confidence = label === 'safe' ? 1 - risk : risk;
 
-function loadFromFile(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try { renderDashboard(JSON.parse(ev.target.result)); closeModal(); }
-    catch { alert('Format JSON tidak valid.'); }
-  };
-  reader.readAsText(file);
-}
-
-function loadFromText() {
-  try {
-    const data = JSON.parse(document.getElementById('jsonInput').value);
-    renderDashboard(data);
-    closeModal();
-  } catch { alert('Format JSON tidak valid.'); }
-}
-
-function loadDemo() {
-  const now = Date.now();
-  const urls = [
-    'https://google.com','http://illinois-aap.org','https://github.com','http://bit.ly/fakepaypal',
-    'https://youtube.com','http://allegro.pl-oferta.cfd','https://figma.com','http://paypal-secure.xyz',
-    'https://stackoverflow.com','http://login-bank-id.net','https://twitter.com','http://amazon-verify.tk',
-    'https://reddit.com','http://netflix-update.xyz','https://linkedin.com','https://claude.ai',
-    'http://phishing-test.ml','https://v-class.gunadarma.ac.id','http://swapnil884.github.io/AmazonClone',
-    'https://web.whatsapp.com'
-  ];
-  const labels = ['safe','phishing','safe','phishing','safe','phishing','safe','phishing','safe','phishing','safe','phishing','safe','phishing','safe','safe','phishing','safe','phishing','safe'];
-  const confs = [0.88,0.84,0.92,0.79,0.95,0.81,0.72,0.91,0.86,0.77,0.93,0.88,0.85,0.76,0.90,0.72,0.84,0.88,0.84,0.52];
-  const demo = urls.map((url,i) => ({
-    url, label: labels[i], confidence: confs[i],
-    timestamp: now - (i * 3600000 * 3)
-  }));
-  renderDashboard(demo);
-}
-
-// ── DASHBOARD ─────────────────────────────────────────────
-function renderDashboard(data) {
-  if (!Array.isArray(data) || !data.length) { alert('Data kosong atau format salah.'); return; }
-  allData = [...data].sort((a,b) => b.timestamp - a.timestamp);
-
-  document.getElementById('importBar').classList.add('hidden');
-  document.getElementById('statsGrid').style.display = 'grid';
-  document.getElementById('chartsGrid').style.display = 'grid';
-  document.getElementById('historyCard').style.display = 'block';
-
-  const safe = data.filter(d => d.label === 'safe');
-  const phish = data.filter(d => d.label === 'phishing');
-  const avgConf = data.reduce((a,b) => a + (b.confidence||0), 0) / data.length;
-
-  document.getElementById('statTotal').textContent = data.length;
-  document.getElementById('statSafe').textContent = safe.length;
-  document.getElementById('statPhish').textContent = phish.length;
-  document.getElementById('statConf').textContent = Math.round(avgConf * 100) + '%';
-
-  renderCharts(data, safe, phish);
-  currentFilter = 'all';
-  searchQuery = '';
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter==='all'));
-  document.getElementById('searchInput').value = '';
-  applyFilter();
-}
-
-function renderCharts(data, safe, phish) {
-  // Donut
-  if (pieInst) pieInst.destroy();
-  pieInst = new Chart(document.getElementById('pieChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Aman','Phishing'],
-      datasets: [{ data: [safe.length, phish.length], backgroundColor: ['#1D9E75','#D85A30'], borderWidth: 0, hoverOffset: 4 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: {
-        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/data.length*100)}%)` }
-      }}
+      return {
+        ...item,
+        label,
+        uiLabel: label,
+        confidence: round4(confidence),
+        phishingProbability: round4(risk),
+        safeProbability: round4(1 - risk),
+        timestamp: item.timestamp || Date.now()
+      };
     }
-  });
 
-  // Bar — 20 terakhir
-  const sorted20 = [...data].sort((a,b) => a.timestamp-b.timestamp).slice(-20);
-  if (barInst) barInst.destroy();
-  barInst = new Chart(document.getElementById('barChart'), {
-    type: 'bar',
-    data: {
-      labels: sorted20.map((_,i) => '#'+(i+1)),
-      datasets: [{ data: sorted20.map(d => Math.round((d.confidence||0)*100)), backgroundColor: sorted20.map(d => d.label==='phishing'?'#F0997B':'#5DCAA5'), borderRadius: 4, borderSkipped: false }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { min:0, max:100, ticks: { callback: v => v+'%', font:{size:10} }, grid:{color:'#f0edf8'} },
-        x: { ticks: { font:{size:9} }, grid:{display:false} }
+    function getUiLabel(item = {}, risk = getPhishingProbability(item)) {
+      const ui = String(item.uiLabel || '').toLowerCase();
+      if (ui === 'safe' || ui === 'caution' || ui === 'phishing') return ui;
+
+      if (risk >= UI_THRESHOLDS.PHISHING) return 'phishing';
+      if (risk >= UI_THRESHOLDS.CAUTION) return 'caution';
+      return 'safe';
+    }
+
+    function getPhishingProbability(item = {}) {
+      if (typeof item.phishingProbability === 'number') return clamp01(item.phishingProbability);
+      if (typeof item.probability === 'number') return clamp01(item.probability);
+
+      if (typeof item.confidence === 'number') {
+        const label = String(item.modelLabel || item.label || '').toLowerCase();
+        if (label === 'phishing' || label === 'caution') return clamp01(item.confidence);
+        if (label === 'safe' || label === 'legitimate' || label === 'legitimate/safe') return clamp01(1 - item.confidence);
+      }
+
+      return 0.5;
+    }
+
+    function clamp01(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return 0.5;
+      return Math.max(0, Math.min(1, n));
+    }
+
+    function round4(value) {
+      return Math.round(value * 10000) / 10000;
+    }
+
+    function labelText(label) {
+      if (label === 'safe') return 'Aman';
+      if (label === 'caution') return 'Waspada';
+      return 'Phishing';
+    }
+
+    function labelIcon(label) {
+      if (label === 'safe') return 'ti-shield-check';
+      if (label === 'caution') return 'ti-alert-circle';
+      return 'ti-alert-triangle';
+    }
+
+    function labelClass(label) {
+      if (label === 'safe') return 's';
+      if (label === 'caution') return 'w';
+      return 'p';
+    }
+
+    function renderDashboard(data) {
+      if (!Array.isArray(data) || !data.length) { alert('Data kosong atau format salah.'); return; }
+
+      allData = data.map(normalizeItem).sort((a, b) => b.timestamp - a.timestamp);
+      persistHistory();
+
+      document.getElementById('importBar').classList.add('hidden');
+      document.getElementById('statsGrid').style.display = 'grid';
+      document.getElementById('chartsGrid').style.display = 'grid';
+      document.getElementById('historyCard').style.display = 'block';
+
+      const safe = allData.filter(d => d.label === 'safe');
+      const caution = allData.filter(d => d.label === 'caution');
+      const phish = allData.filter(d => d.label === 'phishing');
+
+      document.getElementById('statTotal').textContent = allData.length;
+      document.getElementById('statSafe').textContent = safe.length;
+      document.getElementById('statCaution').textContent = caution.length;
+      document.getElementById('statPhish').textContent = phish.length;
+
+      renderCharts(allData, safe, caution, phish);
+      currentFilter = 'all';
+      searchQuery = '';
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+      document.getElementById('searchInput').value = '';
+      applyFilter();
+    }
+
+    function renderCharts(data, safe, caution, phish) {
+      if (pieInst) pieInst.destroy();
+      pieInst = new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Aman', 'Waspada', 'Phishing'],
+          datasets: [{
+            data: [safe.length, caution.length, phish.length],
+            backgroundColor: [COLORS.safe, COLORS.caution, COLORS.phishing],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw / data.length * 100)}%)` } }
+          }
+        }
+      });
+
+      const sorted20 = [...data].sort((a, b) => a.timestamp - b.timestamp).slice(-20);
+      if (barInst) barInst.destroy();
+      barInst = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+          labels: sorted20.map((_, i) => '#' + (i + 1)),
+          datasets: [{
+            data: sorted20.map(d => Math.round(d.confidence * 100)),
+            backgroundColor: sorted20.map(d => d.label === 'phishing' ? '#F0997B' : d.label === 'caution' ? '#F2C94C' : '#5DCAA5'),
+            borderRadius: 4,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 100, ticks: { callback: v => v + '%', font: { size: 10 } }, grid: { color: '#f0edf8' } },
+            x: { ticks: { font: { size: 9 } }, grid: { display: false } }
+          }
+        }
+      });
+
+      const dayMap = {}, safeMap = {}, cautionMap = {}, phishMap = {};
+      data.forEach(d => {
+        const day = new Date(d.timestamp).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+        dayMap[day] = (dayMap[day] || 0) + 1;
+        if (d.label === 'safe') safeMap[day] = (safeMap[day] || 0) + 1;
+        else if (d.label === 'caution') cautionMap[day] = (cautionMap[day] || 0) + 1;
+        else phishMap[day] = (phishMap[day] || 0) + 1;
+      });
+      const days = Object.keys(dayMap).slice(-14);
+      if (lineInst) lineInst.destroy();
+      lineInst = new Chart(document.getElementById('lineChart'), {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [
+            { data: days.map(d => dayMap[d] || 0), borderColor: COLORS.total, backgroundColor: 'rgba(83,74,183,0.06)', tension: 0.3, pointRadius: 3, fill: true },
+            { data: days.map(d => safeMap[d] || 0), borderColor: COLORS.safe, backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, borderDash: [4, 3] },
+            { data: days.map(d => cautionMap[d] || 0), borderColor: COLORS.caution, backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, borderDash: [4, 3] },
+            { data: days.map(d => phishMap[d] || 0), borderColor: COLORS.phishing, backgroundColor: 'transparent', tension: 0.3, pointRadius: 3, borderDash: [4, 3] }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f0edf8' } },
+            x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+
+      const buckets = Array(10).fill(0);
+      data.forEach(d => { buckets[Math.min(Math.floor(d.confidence * 10), 9)]++; });
+      if (histInst) histInst.destroy();
+      histInst = new Chart(document.getElementById('histChart'), {
+        type: 'bar',
+        data: {
+          labels: ['0-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80-90', '90-100'],
+          datasets: [{ data: buckets, backgroundColor: '#AFA9EC', borderRadius: 4, borderSkipped: false }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f0edf8' } },
+            x: { ticks: { font: { size: 9 }, maxRotation: 45 }, grid: { display: false } }
+          }
+        }
+      });
+
+      const domainMap = {};
+      data.forEach(d => {
+        try {
+          const host = new URL(d.url.startsWith('http') ? d.url : 'https://' + d.url).hostname;
+          domainMap[host] = (domainMap[host] || 0) + 1;
+        } catch { }
+      });
+      const topDomains = Object.entries(domainMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      if (domainInst) domainInst.destroy();
+      domainInst = new Chart(document.getElementById('domainChart'), {
+        type: 'bar',
+        data: {
+          labels: topDomains.map(([d]) => d.length > 20 ? d.substring(0, 20) + '…' : d),
+          datasets: [{ data: topDomains.map(([, n]) => n), backgroundColor: '#7F77DD', borderRadius: 4, borderSkipped: false }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: '#f0edf8' } },
+            y: { ticks: { font: { size: 9 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function applyFilter() {
+      filteredData = allData.filter(d => {
+        const matchFilter = currentFilter === 'all' || d.label === currentFilter;
+        const matchSearch = !searchQuery || (() => {
+          try { return new URL(d.url.startsWith('http') ? d.url : 'https://' + d.url).hostname.toLowerCase().includes(searchQuery); }
+          catch { return String(d.url || '').toLowerCase().includes(searchQuery); }
+        })();
+        return matchFilter && matchSearch;
+      });
+      currentPage = 1;
+      renderHistoryPage();
+    }
+
+    function renderHistoryPage() {
+      const total = filteredData.length;
+      const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+      currentPage = Math.min(currentPage, totalPages);
+
+      document.getElementById('historyCount').textContent = `${total} scan ditemukan`;
+      document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+      document.getElementById('prevBtn').disabled = currentPage <= 1;
+      document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+      const items = filteredData.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+      const list = document.getElementById('historyList');
+      if (items.length === 0) {
+        list.innerHTML = `<div class="empty-state"><i class="ti ti-search"></i>Tidak ada hasil ditemukan</div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(item => {
+        const label = item.label;
+        const cls = labelClass(label);
+        const conf = Math.round(item.confidence * 100);
+        const time = new Date(item.timestamp).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        let domain = item.url;
+        try { domain = new URL(item.url.startsWith('http') ? item.url : 'https://' + item.url).hostname; } catch { }
+
+        return `<div class="hitem">
+          <div class="h-ico ${cls}"><i class="ti ${labelIcon(label)}" aria-hidden="true"></i></div>
+          <span class="h-url" title="${escHtml(item.url)}">${escHtml(domain)}</span>
+          <span class="h-badge ${cls}">${labelText(label)}</span>
+          <span class="h-conf">${conf}% ${label === 'safe' ? 'aman' : 'risiko'}</span>
+          <span class="h-time">${time}</span>
+          <button class="delete-item-btn" type="button" data-key="${escHtml(makeItemKey(item))}" title="Hapus riwayat ini" aria-label="Hapus riwayat ini">
+            <i class="ti ti-trash" aria-hidden="true"></i>
+          </button>
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('.delete-item-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteHistoryItem(btn.dataset.key));
+      });
+    }
+
+    function deleteHistoryItem(key) {
+      if (!key) return;
+      if (!confirm('Hapus riwayat scan ini?')) return;
+
+      allData = allData.filter(item => makeItemKey(item) !== key);
+      persistHistory();
+
+      if (allData.length === 0) {
+        resetDashboard();
+        return;
+      }
+
+      renderDashboard(allData);
+    }
+
+    function clearDashboardHistory() {
+      if (!allData.length) return;
+      if (!confirm('Hapus semua riwayat scan?')) return;
+
+      allData = [];
+      filteredData = [];
+      persistHistory();
+      resetDashboard();
+    }
+
+    function resetDashboard() {
+      if (pieInst) pieInst.destroy();
+      if (barInst) barInst.destroy();
+      if (lineInst) lineInst.destroy();
+      if (histInst) histInst.destroy();
+      if (domainInst) domainInst.destroy();
+      pieInst = barInst = lineInst = histInst = domainInst = null;
+
+      document.getElementById('importBar').classList.remove('hidden');
+      document.getElementById('statsGrid').style.display = 'none';
+      document.getElementById('chartsGrid').style.display = 'none';
+      document.getElementById('historyCard').style.display = 'none';
+      document.getElementById('historyList').innerHTML = '';
+      document.getElementById('historyCount').textContent = '';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('pageInfo').textContent = '1 / 1';
+      document.getElementById('prevBtn').disabled = true;
+      document.getElementById('nextBtn').disabled = true;
+
+      document.getElementById('statTotal').textContent = '0';
+      document.getElementById('statSafe').textContent = '0';
+      document.getElementById('statCaution').textContent = '0';
+      document.getElementById('statPhish').textContent = '0';
+    }
+
+    function persistHistory() {
+      try {
+        localStorage.setItem('phishingHistory', JSON.stringify(allData));
+      } catch (e) {
+        console.warn('Gagal menyimpan riwayat dashboard:', e);
       }
     }
-  });
 
-  // Line — tren per hari
-  const dayMap={}, safeMap={}, phishMap={};
-  data.forEach(d => {
-    const day = new Date(d.timestamp).toLocaleDateString('id-ID',{day:'2-digit',month:'short'});
-    dayMap[day] = (dayMap[day]||0)+1;
-    if(d.label==='safe') safeMap[day]=(safeMap[day]||0)+1;
-    else phishMap[day]=(phishMap[day]||0)+1;
-  });
-  const days = Object.keys(dayMap).slice(-14);
-  if (lineInst) lineInst.destroy();
-  lineInst = new Chart(document.getElementById('lineChart'), {
-    type: 'line',
-    data: {
-      labels: days,
-      datasets: [
-        { data: days.map(d=>dayMap[d]||0), borderColor:'#534AB7', backgroundColor:'rgba(83,74,183,0.06)', tension:0.3, pointRadius:3, fill:true },
-        { data: days.map(d=>safeMap[d]||0), borderColor:'#1D9E75', backgroundColor:'transparent', tension:0.3, pointRadius:3, borderDash:[4,3] },
-        { data: days.map(d=>phishMap[d]||0), borderColor:'#D85A30', backgroundColor:'transparent', tension:0.3, pointRadius:3, borderDash:[4,3] }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false} },
-      scales: {
-        y: { beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f0edf8'} },
-        x: { ticks:{font:{size:10}}, grid:{display:false} }
-      }
+    function makeItemKey(item = {}) {
+      return encodeURIComponent(JSON.stringify([item.timestamp || 0, item.url || '']));
     }
-  });
 
-  // Histogram confidence
-  const buckets = Array(10).fill(0);
-  data.forEach(d => { const idx = Math.min(Math.floor((d.confidence||0)*10),9); buckets[idx]++; });
-  if (histInst) histInst.destroy();
-  histInst = new Chart(document.getElementById('histChart'), {
-    type: 'bar',
-    data: {
-      labels: ['0-10','10-20','20-30','30-40','40-50','50-60','60-70','70-80','80-90','90-100'],
-      datasets: [{ data: buckets, backgroundColor: '#AFA9EC', borderRadius: 4, borderSkipped: false }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false} },
-      scales: {
-        y: { beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f0edf8'} },
-        x: { ticks:{font:{size:9},maxRotation:45}, grid:{display:false} }
-      }
+    function removeDataQueryParam() {
+      try {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has('data')) return;
+        url.searchParams.delete('data');
+        window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+      } catch { }
     }
-  });
 
-  // Top domain
-  const domainMap = {};
-  data.forEach(d => {
-    try {
-      const host = new URL(d.url.startsWith('http')?d.url:'https://'+d.url).hostname;
-      domainMap[host] = (domainMap[host]||0)+1;
-    } catch {}
-  });
-  const topDomains = Object.entries(domainMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  if (domainInst) domainInst.destroy();
-  domainInst = new Chart(document.getElementById('domainChart'), {
-    type: 'bar',
-    data: {
-      labels: topDomains.map(([d])=>d.length>20?d.substring(0,20)+'…':d),
-      datasets: [{ data: topDomains.map(([,n])=>n), backgroundColor: '#7F77DD', borderRadius: 4, borderSkipped: false }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false} },
-      scales: {
-        x: { beginAtZero:true, ticks:{stepSize:1,font:{size:10}}, grid:{color:'#f0edf8'} },
-        y: { ticks:{font:{size:9}}, grid:{display:false} }
-      }
+    function escHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-  });
-}
-
-function applyFilter() {
-  filteredData = allData.filter(d => {
-    const matchFilter = currentFilter === 'all' || d.label === currentFilter;
-    const matchSearch = !searchQuery || (() => {
-      try { return new URL(d.url.startsWith('http')?d.url:'https://'+d.url).hostname.toLowerCase().includes(searchQuery); }
-      catch { return d.url.toLowerCase().includes(searchQuery); }
-    })();
-    return matchFilter && matchSearch;
-  });
-  currentPage = 1;
-  renderHistoryPage();
-}
-
-function renderHistoryPage() {
-  const total = filteredData.length;
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  currentPage = Math.min(currentPage, totalPages);
-
-  document.getElementById('historyCount').textContent = `${total} scan ditemukan`;
-  document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
-  document.getElementById('prevBtn').disabled = currentPage <= 1;
-  document.getElementById('nextBtn').disabled = currentPage >= totalPages;
-
-  const items = filteredData.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
-  const list = document.getElementById('historyList');
-  if (items.length === 0) {
-    list.innerHTML = `<div class="empty-state"><i class="ti ti-search"></i>Tidak ada hasil ditemukan</div>`;
-    return;
-  }
-  list.innerHTML = items.map(item => {
-    const isP = item.label === 'phishing';
-    const conf = Math.round((item.confidence||0)*100);
-    const time = new Date(item.timestamp).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    let domain = item.url;
-    try { domain = new URL(item.url.startsWith('http')?item.url:'https://'+item.url).hostname; } catch {}
-    return `<div class="hitem">
-      <div class="h-ico ${isP?'p':'s'}"><i class="ti ${isP?'ti-alert-triangle':'ti-shield-check'}" aria-hidden="true"></i></div>
-      <span class="h-url" title="${escHtml(item.url)}">${escHtml(domain)}</span>
-      <span class="h-badge ${isP?'p':'s'}">${isP?'Phishing':'Aman'}</span>
-      <span class="h-conf">${conf}% yakin</span>
-      <span class="h-time">${time}</span>
-    </div>`;
-  }).join('');
-}
-
-// ── SCAN ─────────────────────────────────────────────────
-async function doScan() {
-  const url = document.getElementById('urlInput').value.trim();
-  if (!url) return;
-  const btn = document.getElementById('scanBtn');
-  btn.disabled = true; btn.textContent = '...';
-  const res = document.getElementById('inlineScanResult');
-  res.style.display = 'block';
-  res.innerHTML = `<div class="result-mini scanning" style="text-align:center;padding:12px;">
-    <span class="scan-ring-sm"></span><span style="font-size:11px;color:#c4bdf0;">Menganalisis…</span>
-  </div>`;
-  try {
-    const result = await predictURL(url);
-    const isSafe = result.label === 'safe';
-    const confPct = Math.round((result.confidence||0)*100);
-    const features = result.features || {};
-    const feats = Object.entries(features).filter(([,bad])=>bad).slice(0,4)
-      .map(([k])=>`<span class="mini-feat"><span class="mini-feat-dot"></span>${escHtml(k)}</span>`).join('');
-    res.innerHTML = `<div class="result-mini ${result.label}">
-      <div class="mini-top">
-        <div class="mini-status">
-          <div class="mini-icon ${result.label}"><i class="ti ${isSafe?'ti-shield-check':'ti-alert-triangle'}" aria-hidden="true"></i></div>
-          <span class="mini-label ${result.label}">${isSafe?'Aman':'Phishing'}</span>
-        </div>
-        <span class="mini-pill ${result.label}">${confPct}% yakin</span>
-      </div>
-      <div class="mini-url">${escHtml(url.length>70?url.substring(0,70)+'…':url)}</div>
-      ${feats?`<div class="mini-feats">${feats}</div>`:''}
-      <div class="bar-lbl"><span>${isSafe?'Skor keamanan':'Risiko phishing'}</span><span style="color:${isSafe?'#1D9E75':'#D85A30'}">${confPct}%</span></div>
-      <div class="bar-track"><div class="bar-fill ${result.label}" style="width:${confPct}%"></div></div>
-    </div>`;
-  } catch(e) {
-    res.innerHTML = `<div class="result-mini error"><div style="font-size:11px;color:#9A6700;">Error: ${escHtml(e.message)}</div></div>`;
-  }
-  btn.disabled = false; btn.textContent = 'Scan';
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-</script>
+  </script>
 </body>
+
 </html>

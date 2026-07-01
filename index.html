@@ -116,6 +116,7 @@ h1 span{color:var(--purple-light);}
 .conf-pill.phishing{background:var(--danger-bg);color:#712B13;}
 .res-url{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.reason-summary{font-size:11px;color:#8f82c9;font-style:italic;margin:8px 0 8px;line-height:1.5;}
 .feat{display:flex;align-items:center;gap:7px;font-size:11px;color:#8c87a8;}
 .feat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 .feat-dot.bad{background:#F0997B;}
@@ -172,6 +173,23 @@ footer{
   nav{padding:0 16px;}
   .hero{padding:48px 16px 40px;}
 }
+
+/* caution state — added for 3-level URL risk UI */
+:root{--caution:#E6A817;--caution-bg:#FFF6DC;}
+.stat-n.caution{color:var(--caution);}
+.result-mini.caution{border-color:#F0D17A;background:#FFFBEE;}
+.mini-icon.caution{background:var(--caution-bg);}
+.mini-icon.caution i{color:var(--caution);}
+.mini-label.caution{color:#8A5D00;}
+.mini-pill.caution{background:var(--caution-bg);color:#7A5200;}
+.bar-fill.caution{background:#E6A817;}
+.result-box.caution{border-color:#F0D17A;background:#FFFBEE;}
+.res-icon.caution{background:var(--caution-bg);}
+.res-icon.caution i{color:var(--caution);font-size:17px;}
+.res-label.caution{color:#8A5D00;}
+.conf-pill.caution{background:var(--caution-bg);color:#7A5200;}
+.feat-dot.good{background:#5DCAA5;}
+
 </style>
 </head>
 <body>
@@ -230,7 +248,7 @@ footer{
     <div class="feat-card">
       <div class="feat-ico"><i class="ti ti-brain" aria-hidden="true"></i></div>
       <div class="feat-title">Model ML offline</div>
-      <div class="feat-desc">Random Forest dengan 25 pohon keputusan dan 30 fitur URL. Berjalan langsung di browser, tidak ada data yang dikirim ke server.</div>
+      <div class="feat-desc">Random Forest dengan fitur URL lexical dari dataset Mendeley. Berjalan langsung di browser, tidak ada data yang dikirim ke server.</div>
     </div>
     <div class="feat-card">
       <div class="feat-ico"><i class="ti ti-bolt" aria-hidden="true"></i></div>
@@ -307,6 +325,9 @@ footer{
 <!-- Model JS untuk scan langsung di halaman ini -->
 <script src="model.js"></script>
 <script>
+const UI_THRESHOLDS = { CAUTION: 0.50, PHISHING: 0.70 };
+const COLORS = { safe:'#1D9E75', caution:'#E6A817', phishing:'#D85A30' };
+
 const scanBtn = document.getElementById('scanBtn');
 const urlInput = document.getElementById('urlInput');
 const scanResult = document.getElementById('scanResult');
@@ -315,56 +336,332 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function clamp01(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0.5;
+  return Math.max(0, Math.min(1, n));
+}
+
+function getPhishingProbability(result = {}) {
+  if (typeof result.phishingProbability === 'number') return clamp01(result.phishingProbability);
+  if (typeof result.probability === 'number') return clamp01(result.probability);
+
+  if (typeof result.confidence === 'number') {
+    const label = String(result.modelLabel || result.label || '').toLowerCase();
+    if (label === 'phishing' || label === 'caution') return clamp01(result.confidence);
+    if (label === 'safe' || label === 'legitimate' || label === 'legitimate/safe') return clamp01(1 - result.confidence);
+  }
+
+  return 0.5;
+}
+
+function getUiLabel(result = {}) {
+  const risk = getPhishingProbability(result);
+  if (risk >= UI_THRESHOLDS.PHISHING) return 'phishing';
+  if (risk >= UI_THRESHOLDS.CAUTION) return 'caution';
+  return 'safe';
+}
+
+function labelText(label) {
+  if (label === 'safe') return 'Aman';
+  if (label === 'caution') return 'Perlu dicek';
+  return 'Berisiko tinggi';
+}
+
+function labelIcon(label) {
+  if (label === 'safe') return 'ti-shield-check';
+  if (label === 'caution') return 'ti-alert-circle';
+  return 'ti-alert-triangle';
+}
+
+
+function getReasonSummary(tLabel, riskPct) {
+  if (tLabel === 'safe') {
+    return 'Struktur URL terlihat normal.';
+  }
+
+  if (tLabel === 'caution') {
+    return `Ada pola URL yang perlu dicek ulang. Risiko ${riskPct}%.`;
+  }
+
+  return `URL ini mirip pola phishing. Risiko ${riskPct}%.`;
+}
+
+function getReasonItems(result = {}, tLabel = 'safe') {
+  if (Array.isArray(result.reasons) && result.reasons.length > 0) {
+    return dedupe(result.reasons.map(String).filter(Boolean));
+  }
+
+  const features = result.features || {};
+  const reasons = [];
+
+  for (const [key, value] of Object.entries(features)) {
+    if (!isTriggeredFeature(value)) continue;
+
+    if (typeof value === 'string') {
+      reasons.push(value);
+      continue;
+    }
+
+    if (value && typeof value === 'object') {
+      if (value.reason) {
+        reasons.push(value.reason);
+        continue;
+      }
+
+      if (value.label) {
+        reasons.push(value.label);
+        continue;
+      }
+    }
+
+    reasons.push(humanizeFeatureName(key));
+  }
+
+  if (reasons.length > 0) {
+    return dedupe(reasons);
+  }
+
+  const fallback = buildFallbackReasons(features, tLabel);
+
+  if (fallback.length > 0) {
+    return fallback;
+  }
+
+  if (tLabel === 'safe') {
+    return [
+      'Panjang URL & domain masih dalam rentang wajar',
+      'Tidak ditemukan simbol atau pola URL yang mencurigakan',
+    ];
+  }
+
+  if (tLabel === 'caution') {
+    return [
+      'Ada satu atau dua ciri URL yang di luar kebiasaan (misal panjang URL atau jumlah subdomain)',
+      'Belum cukup kuat dikategorikan phishing, tapi tetap perlu dicek manual',
+    ];
+  }
+
+  return [
+    'Kombinasi ciri URL (panjang, karakter khusus, atau struktur domain) mendekati pola phishing',
+    'Skor risiko melewati ambang batas yang ditetapkan model',
+  ];
+}
+
+function buildFallbackReasons(features = {}, tLabel = 'safe') {
+  const reasons = [];
+
+  const urlLen = features.URLLength ?? features.url_length;
+  if (typeof urlLen === 'number') {
+    if (urlLen > 75) {
+      reasons.push(`URL cukup panjang (${urlLen} karakter)`);
+    } else if (tLabel === 'safe') {
+      reasons.push(`Panjang URL wajar (${urlLen} karakter)`);
+    }
+  }
+
+  const domainLen = features.DomainLength ?? features.domain_length;
+  if (typeof domainLen === 'number' && domainLen > 30) {
+    reasons.push(`Nama domain cukup panjang (${domainLen} karakter)`);
+  }
+
+  const subDomain = features.NoOfSubDomain ?? features.number_of_subdomains;
+  if (typeof subDomain === 'number') {
+    if (subDomain > 2) {
+      reasons.push(`Subdomain lebih banyak dari biasanya (${subDomain})`);
+    } else if (tLabel === 'safe') {
+      reasons.push(`Jumlah subdomain normal (${subDomain})`);
+    }
+  }
+
+  const isIP = features.IsDomainIP ?? features.has_ip_address;
+  if (isIP === 1 || isIP === true) {
+    reasons.push('Domain berupa alamat IP, bukan nama domain biasa');
+  }
+
+  const isHttps = features.IsHTTPS ?? features.has_https;
+  if (isHttps === 0 || isHttps === false) {
+    reasons.push('Koneksi tidak menggunakan HTTPS');
+  } else if (tLabel === 'safe' && (isHttps === 1 || isHttps === true)) {
+    reasons.push('Menggunakan koneksi HTTPS');
+  }
+
+  const digits = features.NoOfDegitsInURL ?? features.number_of_digits_in_url;
+  if (typeof digits === 'number' && digits > 5) {
+    reasons.push(`Cukup banyak angka acak di URL (${digits})`);
+  }
+
+  const specialChars =
+    features.NoOfOtherSpecialCharsInURL ?? features.number_of_special_characters_in_url;
+  if (typeof specialChars === 'number' && specialChars > 5) {
+    reasons.push(`Cukup banyak karakter khusus (${specialChars})`);
+  }
+
+  const atSymbol = features.has_at_symbol;
+  if (atSymbol === 1 || atSymbol === true) {
+    reasons.push('Ada simbol @ di URL, sering dipakai untuk menyamarkan alamat asli');
+  }
+
+  return dedupe(reasons);
+}
+
+function isTriggeredFeature(value) {
+  if (value === true) return true;
+  if (typeof value === 'string' && value.trim()) return true;
+
+  if (value && typeof value === 'object') {
+    if (value.triggered === true) return true;
+    if (value.isBad === true) return true;
+    if (value.reason || value.label) return true;
+  }
+
+  return false;
+}
+
+function humanizeFeatureName(key) {
+  const dictionary = {
+    URLLength: 'URL terlalu panjang',
+    DomainLength: 'Domain terlalu panjang',
+    TLDLength: 'TLD tidak umum',
+    NoOfSubDomain: 'Subdomain terlalu banyak',
+    NoOfLettersInURL: 'Banyak huruf di URL',
+    NoOfDegitsInURL: 'Banyak angka acak',
+    NoOfEqualsInURL: 'Banyak tanda =',
+    NoOfQMarkInURL: 'Ada query mencurigakan',
+    NoOfAmpersandInURL: 'Banyak parameter',
+    NoOfOtherSpecialCharsInURL: 'Banyak karakter khusus',
+    SpacialCharRatioInURL: 'Rasio karakter khusus tinggi',
+    IsDomainIP: 'Pakai alamat IP langsung',
+    IsHTTPS: 'Tidak memakai HTTPS',
+
+    url_length: 'URL terlalu panjang',
+    domain_length: 'Domain terlalu panjang',
+    path_length: 'Path terlalu panjang',
+    query_length: 'Query terlalu panjang',
+    number_of_dots_in_url: 'Banyak titik',
+    number_of_hyphens_in_url: 'Banyak tanda hubung',
+    number_of_underscores_in_url: 'Ada underscore',
+    number_of_slashes_in_url: 'Path berlapis',
+    number_of_digits_in_url: 'Banyak angka acak',
+    number_of_special_characters_in_url: 'Banyak karakter khusus',
+    number_of_subdomains: 'Subdomain terlalu banyak',
+    entropy_of_url: 'Pola URL acak',
+    entropy_of_domain: 'Domain terlihat acak',
+    has_ip_address: 'Pakai alamat IP langsung',
+    has_https: 'Tidak memakai HTTPS',
+    has_at_symbol: 'Ada simbol @',
+    has_double_slash_redirect: 'Ada pola redirect',
+    has_suspicious_words: 'Ada kata mencurigakan',
+  };
+
+  if (dictionary[key]) return dictionary[key];
+
+  return String(key)
+    .replace(/^num_/gi, 'jumlah_')
+    .replace(/^number_of_/gi, 'jumlah_')
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\burl\b/gi, 'URL')
+    .trim();
+}
+
+function dedupe(items) {
+  return [...new Set(items)];
+}
+
+
+function round4(value) {
+  return Math.round(Number(value) * 10000) / 10000;
+}
+
+function saveScanToHistory(item) {
+  try {
+    const raw = localStorage.getItem('phishingHistory');
+    const history = raw ? JSON.parse(raw) : [];
+    const current = Array.isArray(history) ? history : [];
+    const filtered = current.filter(h => h.url !== item.url);
+
+    filtered.unshift(item);
+
+    if (filtered.length > 100) {
+      filtered.splice(100);
+    }
+
+    localStorage.setItem('phishingHistory', JSON.stringify(filtered));
+  } catch (e) {
+    console.warn('Gagal menyimpan riwayat scan web:', e);
+  }
+}
+
 async function doScan() {
   const url = urlInput.value.trim();
   if (!url) return;
+
   scanBtn.disabled = true;
   scanBtn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> ...';
   scanResult.style.display = 'block';
   scanResult.innerHTML = `<div class="result-box scanning" style="text-align:center;padding:20px;">
     <div class="scan-ring"></div>
-    <div style="font-size:12px;color:#c4bdf0;">Menganalisis dengan model ML…</div>
+    <div style="font-size:12px;color:#c4bdf0;">Menganalisis URL…</div>
   </div>`;
 
   try {
     const result = await predictURL(url);
-    const isSafe = result.label === 'safe';
-    const confPct = Math.round((result.confidence||0)*100);
-    const features = result.features || {};
-    const featHtml = Object.entries(features)
-      .filter(([,bad])=>bad).slice(0,6)
-      .map(([key])=>`<div class="feat"><div class="feat-dot bad"></div>${escHtml(key)}</div>`)
-      .join('') || `<div class="feat" style="color:#c4bdf0;font-style:italic;font-size:11px;">Tidak ada indikator mencurigakan</div>`;
+    const label = getUiLabel(result);
+    const risk = getPhishingProbability(result);
+    const riskPct = Math.round(risk * 100);
+    const safePct = Math.round((1 - risk) * 100);
+    const isSafe = label === 'safe';
+    const displayPct = isSafe ? safePct : riskPct;
+    const historyItem = {
+      ...result,
+      url,
+      label,
+      uiLabel: label,
+      phishingProbability: round4(risk),
+      safeProbability: round4(1 - risk),
+      confidence: round4(isSafe ? 1 - risk : risk),
+      timestamp: Date.now(),
+    };
+    saveScanToHistory(historyItem);
+    const reasonSummary = getReasonSummary(label, riskPct);
+    const reasons = getReasonItems(result, label);
+    const featHtml = reasons
+      .slice(0, 4)
+      .map(reason => `<div class="feat"><div class="feat-dot ${isSafe ? 'good' : 'bad'}"></div><span>${escHtml(reason)}</span></div>`)
+      .join('');
 
     scanResult.innerHTML = `
-      <div class="result-box ${result.label}">
+      <div class="result-box ${label}">
         <div class="res-top">
           <div class="res-status">
-            <div class="res-icon ${result.label}">
-              <i class="ti ${isSafe?'ti-shield-check':'ti-alert-triangle'}" aria-hidden="true"></i>
+            <div class="res-icon ${label}">
+              <i class="ti ${labelIcon(label)}" aria-hidden="true"></i>
             </div>
-            <span class="res-label ${result.label}">${isSafe?'Aman':'Phishing'}</span>
+            <span class="res-label ${label}">${labelText(label)}</span>
           </div>
-          <span class="conf-pill ${result.label}">${confPct}% yakin</span>
+          <span class="conf-pill ${label}">${displayPct}% ${isSafe ? 'aman' : 'risiko'}</span>
         </div>
-        <div class="res-url">${escHtml(url.length>60?url.substring(0,60)+'…':url)}</div>
-        <div class="feat-grid">${featHtml}</div>
+        <div class="res-url">${escHtml(url.length > 60 ? url.substring(0,60) + '…' : url)}</div>
         <div class="bar-lbl">
-          <span>${isSafe?'Skor keamanan':'Risiko phishing'}</span>
-          <span style="color:${isSafe?'#1D9E75':'#D85A30'}">${confPct}%</span>
+          <span>${isSafe ? 'Skor keamanan' : 'Risiko phishing'}</span>
+          <span style="color:${COLORS[label]}">${displayPct}%</span>
         </div>
-        <div class="bar-track"><div class="bar-fill ${result.label}" style="width:${confPct}%"></div></div>
-        <div class="res-note">⚠️ Hasil ini adalah prediksi model ML, bukan jaminan keamanan.</div>
+        <div class="bar-track"><div class="bar-fill ${label}" style="width:${displayPct}%"></div></div>
+        <div class="reason-summary">${escHtml(reasonSummary)}</div>
+        <div class="feat-grid">${featHtml}</div>
+        <div class="res-note">Prediksi ini berbasis analisis URL yang memanfaatkan Model Machine Learning.</div>
       </div>`;
   } catch(e) {
     scanResult.innerHTML = `<div class="result-box error"><div style="font-size:12px;color:#9A6700;">Gagal menganalisis URL: ${escHtml(e.message)}</div></div>`;
   }
+
   scanBtn.disabled = false;
   scanBtn.innerHTML = '<i class="ti ti-scan" aria-hidden="true"></i> Scan';
 }
 
 scanBtn.addEventListener('click', doScan);
-urlInput.addEventListener('keydown', e => { if(e.key==='Enter') doScan(); });
+urlInput.addEventListener('keydown', e => { if(e.key === 'Enter') doScan(); });
 </script>
 </body>
 </html>
