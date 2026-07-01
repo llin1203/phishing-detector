@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "encoding": "utf8",
+  "source": "forest.json",
+  "totalLength": 408546297,
+  "parts": [
+    "forest.part000.json",
+    "forest.part001.json",
+    "forest.part002.json",
+    "forest.part003.json",
+    "forest.part004.json",
+    "forest.part005.json",
+    "forest.part006.json",
+    "forest.part007.json",
+    "forest.part008.json",
+    "forest.part009.json",
+    "forest.part010.json",
+    "forest.part011.json",
+    "forest.part012.json",
+    "forest.part013.json",
+    "forest.part014.json",
+    "forest.part015.json",
+    "forest.part016.json",
+    "forest.part017.json",
+    "forest.part018.json",
+    "forest.part019.json"
+  ]
+}

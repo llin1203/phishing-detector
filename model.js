@@ -6,7 +6,7 @@ const SPECIAL_CHARS_PATTERN = /[^A-Za-z0-9.\-/?:=&_%#@$!]/g;
 const REPEATED_DIGITS_PATTERN = /(\d)\1+/;
 
 let _model = null;
-
+const WEB_MODEL_MANIFEST_URL = "./model/manifest.json";
 function shannonEntropy(text) {
   text = String(text || "");
   if (!text) return 0;
@@ -185,20 +185,72 @@ function extractFeatures(url, featureNames) {
 async function loadModelAssets() {
   if (_model) return _model;
 
-  const modelUrl =
-    typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
-      ? chrome.runtime.getURL("forest.json")
-      : "./forest.json";
+  // Chrome Extension:
+  // tetap pakai forest.json lokal di dalam extension.
+  if (
+    typeof chrome !== "undefined" &&
+    chrome.runtime &&
+    typeof chrome.runtime.getURL === "function"
+  ) {
+    const modelUrl = chrome.runtime.getURL("forest.json");
 
-  const resp = await fetch(modelUrl);
-  if (!resp.ok) throw new Error(`Gagal load model: ${resp.status} ${resp.statusText}`);
+    const resp = await fetch(modelUrl);
 
-  _model = await resp.json();
-  if (!_model.feature_names || !_model.forest || !_model.forest.trees) {
-    throw new Error("forest.json bukan format export Mendeley v3. Pakai artifacts/random_forest_model.json lalu rename jadi forest.json.");
+    if (!resp.ok) {
+      throw new Error(`Gagal load model extension: ${resp.status} ${resp.statusText}`);
+    }
+
+    _model = await resp.json();
+    validateModel(_model);
+    return _model;
   }
 
+  // Web App:
+  // pakai model yang sudah dipecah:
+  // ./model/manifest.json
+  // ./model/forest.part000.json
+  // ./model/forest.part001.json
+  // dst.
+  const manifestResp = await fetch(WEB_MODEL_MANIFEST_URL, {
+    cache: "force-cache",
+  });
+
+  if (!manifestResp.ok) {
+    throw new Error(`Gagal load manifest model: ${manifestResp.status} ${manifestResp.statusText}`);
+  }
+
+  const manifest = await manifestResp.json();
+
+  if (!manifest.parts || !Array.isArray(manifest.parts)) {
+    throw new Error("Manifest model tidak valid: field parts tidak ditemukan.");
+  }
+
+  let jsonText = "";
+
+  for (const part of manifest.parts) {
+    const partResp = await fetch(`./model/${part}`, {
+      cache: "force-cache",
+    });
+
+    if (!partResp.ok) {
+      throw new Error(`Gagal load model chunk ${part}: ${partResp.status} ${partResp.statusText}`);
+    }
+
+    jsonText += await partResp.text();
+  }
+
+  _model = JSON.parse(jsonText);
+  validateModel(_model);
+
   return _model;
+}
+
+function validateModel(model) {
+  if (!model.feature_names || !model.forest || !model.forest.trees) {
+    throw new Error(
+      "Model bukan format export Mendeley. Pastikan file berasal dari random_forest_model.json notebook."
+    );
+  }
 }
 
 function predictTreeProba(tree, row) {
