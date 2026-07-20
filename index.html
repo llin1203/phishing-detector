@@ -120,6 +120,21 @@
       margin: 0 auto;
       padding: 80px 24px 60px;
       text-align: center;
+      animation: heroFloat 5s ease-in-out infinite;
+    }
+
+    @keyframes heroFloat {
+      0% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+
+      100% {
+        transform: translateY(0);
+      }
     }
 
     .hero-badge {
@@ -133,6 +148,23 @@
       padding: 5px 14px;
       border-radius: 20px;
       margin-bottom: 24px;
+      animation: pulse 2s infinite;
+
+
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
     }
 
     .hero-badge i {
@@ -179,7 +211,12 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s;
+      transition: all .3s;
+    }
+
+    .btn-lg:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(83, 74, 183, .25);
     }
 
     .btn-primary {
@@ -215,6 +252,12 @@
       border-radius: 24px;
       padding: 24px;
       box-shadow: 0 4px 40px rgba(83, 74, 183, 0.06);
+      transition: .3s;
+    }
+
+    .scan-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(83, 74, 183, .12);
     }
 
     .scan-label {
@@ -244,8 +287,10 @@
       transition: border-color 0.2s;
     }
 
+    .scan-input:hover,
     .scan-input:focus {
-      border-color: #c4bdf0;
+      border-color: #7F77DD;
+      box-shadow: 0 0 15px rgba(83, 74, 183, .15);
     }
 
     .scan-input::placeholder {
@@ -518,6 +563,12 @@
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 24px;
+      transition: .3s;
+    }
+
+    .feat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(83, 74, 183, .25);
     }
 
     .feat-ico {
@@ -617,6 +668,35 @@
       border: 1px solid var(--border);
       border-radius: 24px;
       padding: 40px;
+      transition: .35s ease;
+    }
+
+    .cta-icon {
+      transition: .4s;
+    }
+
+    .cta-card .btn-primary:hover {
+      box-shadow: 0 15px 35px rgba(83, 74, 183, .35);
+    }
+
+    .hidden {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all .8s ease;
+    }
+
+    .show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .cta-card:hover .cta-icon {
+      transform: rotate(12deg) scale(1.08);
+    }
+
+    .cta-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 45px rgba(83, 74, 183, .12);
     }
 
     .cta-title {
@@ -724,6 +804,18 @@
     .feat-dot.good {
       background: #5DCAA5;
     }
+
+    #typingTitle::after {
+      content: "|";
+      animation: blink .8s infinite;
+      color: #7F77DD;
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
@@ -745,11 +837,11 @@
   <section class="hero">
     <div class="hero-badge">
       <i class="ti ti-cpu" aria-hidden="true"></i>
-      Random Forest ML — tanpa internet, langsung di browser
+      Random Forest ML Model
     </div>
-    <h1>Deteksi <span>phishing</span><br />sebelum terlambat</h1>
+    <h1 id="typingTitle"></h1>
     <p class="hero-sub">Extension Chrome yang secara otomatis menganalisis setiap URL yang kamu kunjungi menggunakan
-      model machine learning — 100% offline, privasi terjaga.</p>
+      model machine learning</p>
     <div class="hero-actions">
       <a class="btn-lg btn-primary" href="#download">
         <i class="ti ti-brand-chrome" aria-hidden="true"></i>
@@ -783,9 +875,9 @@
     <div class="feat-cards">
       <div class="feat-card">
         <div class="feat-ico"><i class="ti ti-brain" aria-hidden="true"></i></div>
-        <div class="feat-title">Model ML offline</div>
-        <div class="feat-desc">Random Forest dengan fitur URL lexical dari dataset Mendeley. Berjalan langsung di
-          browser, tidak ada data yang dikirim ke server.</div>
+        <div class="feat-title">Model Random Forest - ML</div>
+        <div class="feat-desc">Random Forest dipilih karena memiliki akurasi tinggi dalam klasifikasi URL phishing,
+          mampu menangani banyak fitur URL secara efektif.</div>
       </div>
       <div class="feat-card">
         <div class="feat-ico"><i class="ti ti-bolt" aria-hidden="true"></i></div>
@@ -811,7 +903,7 @@
         <div class="step-num">1</div>
         <div>
           <div class="step-title">Download & pasang extension</div>
-          <div class="step-desc">Install Chrome Extension dari tautan di bawah. Extension langsung aktif dan mulai
+          <div class="step-desc">Install Browser Extension dari tautan di bawah. Extension langsung aktif dan mulai
             memantau URL yang kamu kunjungi.</div>
         </div>
       </div>
@@ -819,7 +911,7 @@
         <div class="step-num">2</div>
         <div>
           <div class="step-title">Browsing seperti biasa</div>
-          <div class="step-desc">Extension bekerja di background — setiap URL otomatis dianalisis. Badge ✓ atau ! muncul
+          <div class="step-desc">Extension bekerja di background setiap URL otomatis dianalisis. Badge ✓ atau ! muncul
             di icon extension sebagai indikator.</div>
         </div>
       </div>
@@ -835,7 +927,7 @@
         <div class="step-num">4</div>
         <div>
           <div class="step-title">Deteksi manual jika perlu</div>
-          <div class="step-desc">Masukkan URL apapun di kolom scan — baik di popup extension maupun di web app ini —
+          <div class="step-desc">Masukkan URL apapun di kolom scan, baik di popup extension maupun di web app ini
             untuk mendapatkan hasil analisis instan.</div>
         </div>
       </div>
@@ -844,13 +936,13 @@
 
   <!-- DOWNLOAD CTA -->
   <section class="cta-section" id="download">
+    <section class="cta-section hidden" id="download"></section>
     <div class="cta-card">
-      <div class="feat-ico" style="margin:0 auto 16px;">
+      <div class="feat-ico cta-icon" style="margin:0 auto 16px;">
         <i class="ti ti-brand-chrome" aria-hidden="true"></i>
       </div>
       <div class="cta-title">Pasang extensionnya sekarang</div>
-      <div class="cta-sub">Gratis, open source, tidak perlu akun. Bekerja 100% offline — tidak ada data yang keluar dari
-        browser kamu.</div>
+      <div class="cta-sub">Gratis, open source, tidak perlu akun.</div>
       <a class="btn-lg btn-primary"
         href="https://github.com/llin1203/phishing-detector/releases/download/v1.0.0/phishing-detection-extension.zip"
         target="_blank" rel="noopener" style="display:inline-flex;margin-bottom:12px;">
@@ -859,7 +951,7 @@
       </a>
       <div style="font-size:11px;color:var(--muted);margin-top:8px;">
         Setelah download: buka <code
-          style="font-family:'DM Mono',monospace;color:var(--purple);">chrome://extensions</code> → aktifkan Developer
+          style="font-family:'DM Mono',monospace;color:var(--purple);">browser://extensions</code> → aktifkan Developer
         Mode → Load unpacked → pilih folder extension
       </div>
     </div>
@@ -867,7 +959,7 @@
 
   <footer>
     <div>Phishing Detection — ML-powered URL Scanner</div>
-    <div>Built with Random Forest · 100% offline</div>
+    <div>Built with Random Forest ·</div>
   </footer>
 
   <!-- Model JS untuk scan langsung di halaman ini -->
@@ -1207,7 +1299,30 @@
       scanBtn.disabled = false;
       scanBtn.innerHTML = '<i class="ti ti-scan" aria-hidden="true"></i> Scan';
     }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("show");
+        }
+      });
+    });
 
+    document.querySelectorAll(".hidden").forEach(el => {
+      observer.observe(el);
+    });
+    const text = "Deteksi phishing sebelum terlambat";
+
+    let i = 0;
+
+    function typeWriter() {
+      if (i < text.length) {
+        document.getElementById("typingTitle").innerHTML += text.charAt(i);
+        i++;
+        setTimeout(typeWriter, 70);
+      }
+    }
+
+    window.addEventListener("load", typeWriter);
     scanBtn.addEventListener('click', doScan);
     urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') doScan(); });
   </script>
