@@ -1231,6 +1231,18 @@
       } catch (e) {
         console.warn('Gagal menyimpan riwayat scan web:', e);
       }
+
+      // TAMBAHAN: sinkronkan juga ke extension (chrome.storage.local)
+      try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage(
+            { type: 'MANUAL_SCAN', url: item.url },
+            () => { if (chrome.runtime.lastError) { /* extension belum terpasang, abaikan */ } }
+          );
+        }
+      } catch (e) {
+        console.warn('Extension tidak tersedia, skip sync:', e);
+      }
     }
 
     async function doScan() {
