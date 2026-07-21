@@ -260,6 +260,31 @@
       box-shadow: 0 20px 40px rgba(83, 74, 183, .12);
     }
 
+    .scan-hint {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #f4f2ff;
+      border: 1px solid #ddd6ff;
+      border-radius: 10px;
+      font-size: 11px;
+      color: #534AB7;
+      line-height: 1.4;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .scan-hint i {
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .scan-hint a {
+      color: #534AB7;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
     .scan-label {
       font-size: 11px;
       font-weight: 500;
@@ -936,7 +961,6 @@
 
   <!-- DOWNLOAD CTA -->
   <section class="cta-section" id="download">
-    <section class="cta-section hidden" id="download"></section>
     <div class="cta-card">
       <div class="feat-ico cta-icon" style="margin:0 auto 16px;">
         <i class="ti ti-brand-chrome" aria-hidden="true"></i>
@@ -1214,37 +1238,6 @@
       return Math.round(Number(value) * 10000) / 10000;
     }
 
-    function saveScanToHistory(item) {
-      try {
-        const raw = localStorage.getItem('phishingHistory');
-        const history = raw ? JSON.parse(raw) : [];
-        const current = Array.isArray(history) ? history : [];
-        const filtered = current.filter(h => h.url !== item.url);
-
-        filtered.unshift(item);
-
-        if (filtered.length > 100) {
-          filtered.splice(100);
-        }
-
-        localStorage.setItem('phishingHistory', JSON.stringify(filtered));
-      } catch (e) {
-        console.warn('Gagal menyimpan riwayat scan web:', e);
-      }
-
-      // TAMBAHAN: sinkronkan juga ke extension (chrome.storage.local)
-      try {
-        if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-          chrome.runtime.sendMessage(
-            { type: 'MANUAL_SCAN', url: item.url },
-            () => { if (chrome.runtime.lastError) { /* extension belum terpasang, abaikan */ } }
-          );
-        }
-      } catch (e) {
-        console.warn('Extension tidak tersedia, skip sync:', e);
-      }
-    }
-
     async function doScan() {
       const url = urlInput.value.trim();
       if (!url) return;
@@ -1265,17 +1258,6 @@
         const safePct = Math.round((1 - risk) * 100);
         const isSafe = label === 'safe';
         const displayPct = isSafe ? safePct : riskPct;
-        const historyItem = {
-          ...result,
-          url,
-          label,
-          uiLabel: label,
-          phishingProbability: round4(risk),
-          safeProbability: round4(1 - risk),
-          confidence: round4(isSafe ? 1 - risk : risk),
-          timestamp: Date.now(),
-        };
-        saveScanToHistory(historyItem);
         const reasonSummary = getReasonSummary(label, riskPct);
         const reasons = getReasonItems(result, label);
         const featHtml = reasons
@@ -1303,6 +1285,10 @@
         <div class="reason-summary">${escHtml(reasonSummary)}</div>
         <div class="feat-grid">${featHtml}</div>
         <div class="res-note">Prediksi ini berbasis analisis URL yang memanfaatkan Model Machine Learning.</div>
+        <div class="scan-hint">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          <span>Belum tersimpan ke riwayat. <a href="#download">Pasang extension</a> untuk riwayat lengkap.</span>
+        </div>
       </div>`;
       } catch (e) {
         scanResult.innerHTML = `<div class="result-box error"><div style="font-size:12px;color:#9A6700;">Gagal menganalisis URL: ${escHtml(e.message)}</div></div>`;
@@ -1311,6 +1297,7 @@
       scanBtn.disabled = false;
       scanBtn.innerHTML = '<i class="ti ti-scan" aria-hidden="true"></i> Scan';
     }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
