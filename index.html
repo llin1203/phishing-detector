@@ -841,10 +841,132 @@
         opacity: 0;
       }
     }
+    /* DASHBOARD REMINDER MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(58, 53, 96, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      padding: 28px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(83, 74, 183, 0.2);
+      animation: modalPop 0.25s ease;
+    }
+
+    @keyframes modalPop {
+      from {
+        opacity: 0;
+        transform: scale(0.92);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--purple-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .modal-icon i {
+      font-size: 26px;
+      color: var(--purple);
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .modal-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-btn {
+      padding: 11px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .modal-btn-primary {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .modal-btn-primary:hover {
+      background: var(--purple-light);
+    }
+
+    .modal-btn-secondary {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .modal-btn-secondary:hover {
+      color: var(--text);
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- DASHBOARD REMINDER MODAL -->
+  <div class="modal-overlay" id="dashboardModal">
+    <div class="modal-box">
+      <div class="modal-icon"><i class="ti ti-puzzle" aria-hidden="true"></i></div>
+      <div class="modal-title">Pasang Extension Dulu, Yuk</div>
+      <div class="modal-desc">
+        Dashboard riwayat scan cuma bisa dibuka lewat Browser Extension.
+        Pasang dulu extension-nya, browsing seperti biasa, baru riwayat &amp; visualisasinya bisa muncul di sini.
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-primary" id="modalInstallBtn">
+          <i class="ti ti-download" aria-hidden="true"></i> Pasang Extension
+        </button>
+        <button class="modal-btn modal-btn-secondary" id="modalCloseBtn">Nanti Saja</button>
+      </div>
+    </div>
+  </div>
 
   <nav>
     <a class="nav-brand" href="index.html">
@@ -853,7 +975,7 @@
     </a>
     <div class="nav-links">
       <a class="nav-link" href="#cara-kerja">Cara kerja</a>
-      <a class="nav-link" href="dashboard.html">Dashboard</a>
+      <a class="nav-link dashboard-trigger" href="#download">Dashboard</a>
       <a class="nav-cta" href="#download">Download Extension</a>
     </div>
   </nav>
@@ -872,7 +994,7 @@
         <i class="ti ti-brand-chrome" aria-hidden="true"></i>
         Download Extension
       </a>
-      <a class="btn-lg btn-outline" href="dashboard.html">
+      <a class="btn-lg btn-outline dashboard-trigger" href="#download">
         <i class="ti ti-chart-bar" aria-hidden="true"></i>
         Lihat Dashboard
       </a>
@@ -1238,9 +1360,28 @@
       return Math.round(Number(value) * 10000) / 10000;
     }
 
+    function validateURLInput(value) {
+      const trimmed = String(value || '').trim();
+
+      if (!trimmed) {
+        return { valid: false, message: 'URL tidak boleh kosong. Masukkan URL terlebih dahulu.' };
+      }
+
+      if (!/^https?:\/\//i.test(trimmed)) {
+        return { valid: false, message: 'URL harus diawali dengan http:// atau https://' };
+      }
+
+      return { valid: true, message: '' };
+    }
+
     async function doScan() {
       const url = urlInput.value.trim();
-      if (!url) return;
+      const validation = validateURLInput(url);
+      if (!validation.valid) {
+        scanResult.style.display = 'block';
+        scanResult.innerHTML = `<div class="result-box error"><div style="font-size:12px;color:#9A6700;">${escHtml(validation.message)}</div></div>`;
+        return;
+      }
 
       scanBtn.disabled = true;
       scanBtn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> ...';
@@ -1324,6 +1465,39 @@
     window.addEventListener("load", typeWriter);
     scanBtn.addEventListener('click', doScan);
     urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') doScan(); });
+
+    // DASHBOARD REMINDER MODAL
+    const dashboardModal = document.getElementById('dashboardModal');
+    const modalInstallBtn = document.getElementById('modalInstallBtn');
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+    function openDashboardModal(e) {
+      e.preventDefault();
+      dashboardModal.classList.add('show');
+    }
+
+    function closeDashboardModal() {
+      dashboardModal.classList.remove('show');
+    }
+
+    document.querySelectorAll('.dashboard-trigger').forEach(el => {
+      el.addEventListener('click', openDashboardModal);
+    });
+
+    modalCloseBtn.addEventListener('click', closeDashboardModal);
+
+    modalInstallBtn.addEventListener('click', () => {
+      closeDashboardModal();
+      document.getElementById('download').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    dashboardModal.addEventListener('click', e => {
+      if (e.target === dashboardModal) closeDashboardModal();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && dashboardModal.classList.contains('show')) closeDashboardModal();
+    });
   </script>
 </body>
 
